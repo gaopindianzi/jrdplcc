@@ -12,19 +12,9 @@
 #include <string>
 #include "plc_command_def.h"
 #include "plc_prase.h"
+#include "ops_prase.h"
 
-typedef struct _plc_oplenmap_t
-{
-	unsigned char opnum;
-	unsigned char len;
-} plc_op_lenmap_t;
 
-typedef struct _plc_op_data_t
-{
-	unsigned int  index;
-	std::string   opstr;
-	std::vector<unsigned char> opdat;
-} plc_op_data_t;
 
 const plc_op_lenmap_t plc_len_map[] = 
 {
@@ -79,12 +69,10 @@ const plc_op_lenmap_t plc_len_map[] =
 	{0,0}
 };
 
-std::vector<plc_op_data_t> plc_ops;
-std::vector<plc_op_data_t> plc_ops_unprase;
-unsigned int               plc_op_index;
+
 
 const std::string  reg_plc_ld   = "^ +LD +[XYMTC]\\d+ *(//.*)*";
-const std::string  reg_plc_out  = "^ +OUT +[YMTC]\\d+ *(//.*)*";
+const std::string  reg_plc_out  = "^ +OUT +[XYM]\\d+ *(//.*)*";
 const std::string  reg_plc_nop  = "^ *NOP *(//.*)*";
 const std::string  reg_plc_end  = "^ *END *(//.*)*";
 
@@ -120,98 +108,23 @@ unsigned int read_in_plc(std::string filename)
 	return linecount;
 }
 
-
-//根据正则表达式，返回我符合正则表达式的字符串，可能有多项符合
-int SearchIwantStringByRegex(std::string src,std::string rgx,std::vector<std::string> & outlist)
+void  prase_plc_ops(void)
 {
-	outlist.clear();
-	//
-	boost::match_flag_type flags = boost::match_default; 
-	boost::match_results<std::string::const_iterator> what;
-	boost::regex e;
-	std::string::const_iterator start,end; 
-	//
-	e = rgx;
-	start = src.begin();end = src.end();
-	while(boost::regex_search(start,end,what,e,flags)) {
-		std::string tmp = what[0];
-		start = what[0].second;
-		outlist.push_back(tmp);
-	}
-	return (int)outlist.size();
-}
-
-
-void  prase_plc_ops(std::string & line)
-{
-	plc_op_data_t op;
-	std::vector<std::string> outlist;
-	if(boost::regex_match(line,boost::regex(reg_plc_ld))) {
-		op.index = plc_op_index++;
-		op.opstr = line;
-		std::string rgx = "LD +[XYMTC]\\d+";
-		if(SearchIwantStringByRegex(line,rgx,outlist) == 1) {
-			unsigned long addr;
-			rgx = "\\d+";
-			if(SearchIwantStringByRegex(line,rgx,outlist) == 1) {
-				addr = atol(outlist[0].c_str());
-			} else {
-				printf("error of addr!\n");
-				return ;
-			}
-			rgx = "[XYMTC]";
-			if(SearchIwantStringByRegex(line,rgx,outlist) == 1) {
-				std::string addrtype = outlist[0];
-				if(addrtype == "X") {
-				} else if(addrtype == "Y") {
-					addr += IO_OUTPUT_BASE;
-				} else if(addrtype == "M") {
-					addr += AUXI_RELAY_BASE;
-				} else if(addrtype == "T") {
-					addr += TIMING100MS_EVENT_BASE;
-				} else if(addrtype == "C") {
-					addr += COUNTER_EVENT_BASE;
-				}
-				if(addr <= 0xFFFF) {
-				    op.opdat.clear();
-				    op.opdat.push_back(PLC_LD);
-				    op.opdat.push_back((unsigned char)(addr>>8));
-				    op.opdat.push_back((unsigned char)(addr&0xFF));
-					plc_ops.push_back(op);
-					op.opstr.clear();
-				} else {
-					printf("error of LD addr too big!\n");
-				}
-			} else {
-				printf("error of LD [XYTC]\n");
-			}
-
-		}
-	} else if(boost::regex_match(line,boost::regex(reg_plc_out))) {
-		//o.op = PLC_OUT;
-		//o.opstr = line;
-	} else if(boost::regex_match(line,boost::regex(reg_plc_nop))) {
-		//o.op = PLC_NONE;
-		//o.opstr = line;
-	} else {
-		//未知指令，报错
-	}
-	//plc_ops.push_back(o);
-}
-
-void prase_plc_ops(void)
-{
-	unsigned int i;
+	size_t i;
 	for(i=0;i<plcline.size();i++) {
 		std::string line = plcline[i];
-		if(boost::regex_match(line,boost::regex(reg_device))) {
-			devicestring.push_back(line);
-		} else {
-			prase_plc_ops(line);
-		}
+	    if(boost::regex_match(line,boost::regex(reg_plc_ld))) {
+		    prase_plc_ld(line);
+	    } else if(boost::regex_match(line,boost::regex(reg_plc_out))) {
+		    prase_plc_out(line);
+	    } else if(boost::regex_match(line,boost::regex(reg_plc_nop))) {
+		    //o.op = PLC_NONE;
+		    //o.opstr = line;
+	    } else {
+		    //未知指令，报错
+	    }
 	}
 }
-
 
 void dempprintline(void)
 {
@@ -228,6 +141,8 @@ void dempprintline(void)
 	
 }
 
+unsigned int               plc_op_index;
+
 int main(int argc, const char * argv[])
 {
 	//if(argc < 2) {
@@ -239,7 +154,7 @@ int main(int argc, const char * argv[])
 	//printf("plcc %s\n",pfilename);
 	//printf("readline(%d)\n",read_in_plc(pfilename));
 
-	plcline.push_back(" LD X123  //this is one\n");
+	plcline.push_back("   OUT   X123    //this is one\n");
 	plcline.push_back("   LD Y123  //this is one\n");
 	plcline.push_back(" LD T123     //this is one\n");
 	plcline.push_back("  LD  C123  //this is one\n");
@@ -249,7 +164,6 @@ int main(int argc, const char * argv[])
 	plc_op_index = 0;
 	prase_plc_ops();
 
-	//getstring();
 	dempprintline();
 	return 0;
 }
