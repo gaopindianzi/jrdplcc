@@ -17,6 +17,18 @@ typedef struct _plc_op_data_t
 
 
 int  prase_plc_ld(std::string & line);
+int  prase_plc_ldi(std::string & line);
+int  prase_plc_and(std::string & line);
+int  prase_plc_or(std::string & line);
+int  prase_plc_ldp(std::string & line);
+int  prase_plc_ldf(std::string & line);
+int  prase_plc_andp(std::string & line);
+int  prase_plc_andf(std::string & line);
+int  prase_plc_orp(std::string & line);
+int  prase_plc_orf(std::string & line);
+int  prase_plc_set(std::string & line);
+int  prase_plc_rst(std::string & line);
+int  prase_plc_sei(std::string & line);
 int  prase_plc_out(std::string & line);
 
 #endif

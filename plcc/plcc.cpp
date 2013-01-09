@@ -70,12 +70,16 @@ const plc_op_lenmap_t plc_len_map[] =
 };
 
 
-
-const std::string  reg_plc_ld   = "^ +LD +[XYMTC]\\d+ *(//.*)*";
-const std::string  reg_plc_out  = "^ +OUT +[XYM]\\d+ *(//.*)*";
+const std::string  reg_plc_addr  = " +[XYMTC]\\d+[BDOH]* *(//.*)*";
+const std::string  red_plc_op_pre = "^ +";
+const std::string  reg_plc_out  = "^ +OUT +[XYM]\\d+[BDOH]* *(//.*)*";
+const std::string  reg_plc_outt = "^ +OUT +T\\d+ +K\\d+[BDOH]* *(//.*)*";
+const std::string  reg_plc_outc = "^ +OUT +C\\d+ +K\\d+[BDOH]* *(//.*)*";
+const std::string  reg_plc_op_jmp  = "^ +JMP +\\d+[BDOH]* *(//.*)*";
+const std::string  reg_plc_op_jmps  = "^ +JMPS +\\d+[BDOH]* *(//.*)*";
 const std::string  reg_plc_nop  = "^ *NOP *(//.*)*";
 const std::string  reg_plc_end  = "^ *END *(//.*)*";
-
+//±‡“Î∆˜œ‡πÿ
 const std::string  reg_start    = "(^ *)";
 const std::string  reg_device   ="(#device)";
 const std::string  reg_define   ="(#define(\\(\\w+\\))*)";
@@ -113,11 +117,37 @@ void  prase_plc_ops(void)
 	size_t i;
 	for(i=0;i<plcline.size();i++) {
 		std::string line = plcline[i];
-	    if(boost::regex_match(line,boost::regex(reg_plc_ld))) {
+	    if(boost::regex_match(line,boost::regex(red_plc_op_pre + "LD" + reg_plc_addr))) {
 		    prase_plc_ld(line);
+		} else if(boost::regex_match(line,boost::regex(red_plc_op_pre + "LDI" + reg_plc_addr))) {
+			prase_plc_ldi(line);
+		} else if(boost::regex_match(line,boost::regex(red_plc_op_pre + "AND" + reg_plc_addr))) {
+			prase_plc_and(line);
+		} else if(boost::regex_match(line,boost::regex(red_plc_op_pre + "OR" + reg_plc_addr))) {
+			prase_plc_or(line);
+		} else if(boost::regex_match(line,boost::regex(red_plc_op_pre + "LDP" + reg_plc_addr))) {
+			prase_plc_ldp(line);
+		} else if(boost::regex_match(line,boost::regex(red_plc_op_pre + "LDF" + reg_plc_addr))) {
+			prase_plc_ldf(line);
+		} else if(boost::regex_match(line,boost::regex(red_plc_op_pre + "ANDP" + reg_plc_addr))) {
+			prase_plc_andp(line);
+		} else if(boost::regex_match(line,boost::regex(red_plc_op_pre + "ANDF" + reg_plc_addr))) {
+			prase_plc_andf(line);
+		} else if(boost::regex_match(line,boost::regex(red_plc_op_pre + "ORP" + reg_plc_addr))) {
+			prase_plc_orp(line);
+		} else if(boost::regex_match(line,boost::regex(red_plc_op_pre + "ORF" + reg_plc_addr))) {
+			prase_plc_orf(line);
+		} else if(boost::regex_match(line,boost::regex(red_plc_op_pre + "SET" + reg_plc_addr))) {
+			prase_plc_set(line);
+		} else if(boost::regex_match(line,boost::regex(red_plc_op_pre + "RST" + reg_plc_addr))) {
+			prase_plc_rst(line);
+		} else if(boost::regex_match(line,boost::regex(red_plc_op_pre + "SEI" + reg_plc_addr))) {
+			prase_plc_sei(line);
 	    } else if(boost::regex_match(line,boost::regex(reg_plc_out))) {
 		    prase_plc_out(line);
 	    } else if(boost::regex_match(line,boost::regex(reg_plc_nop))) {
+		} else if(boost::regex_match(line,boost::regex(reg_plc_outt))) {
+		} else if(boost::regex_match(line,boost::regex(reg_plc_outc))) {
 		    //o.op = PLC_NONE;
 		    //o.opstr = line;
 	    } else {
@@ -154,8 +184,22 @@ int main(int argc, const char * argv[])
 	//printf("plcc %s\n",pfilename);
 	//printf("readline(%d)\n",read_in_plc(pfilename));
 
-	plcline.push_back("   OUT   X123    //this is one\n");
-	plcline.push_back("   LD Y123  //this is one\n");
+
+	plcline.push_back("   AND Y123  //this is one\n");
+	plcline.push_back("   OR Y123  //this is one\n");
+	plcline.push_back("   LDP Y123  //this is one\n");
+	plcline.push_back("   LDF Y123  //this is one\n");
+	plcline.push_back("   ANDP Y123  //this is one\n");
+	plcline.push_back("   ANDF Y123  //this is one\n");
+	plcline.push_back("   ORP Y123  //this is one\n");
+	plcline.push_back("   ORF Y123  //this is one\n");
+	plcline.push_back("   SET Y123  //this is one\n");
+	plcline.push_back("   RST Y123  //this is one\n");
+	plcline.push_back("   SEI Y123  //this is one\n");
+
+	plcline.push_back("    OUT   T123  K200D    //this is one\n");
+	plcline.push_back("   OUT   C123  K500D  //this is one\n");
+	
 	plcline.push_back(" LD T123     //this is one\n");
 	plcline.push_back("  LD  C123  //this is one\n");
 	plcline.push_back("  END  //this is one");
