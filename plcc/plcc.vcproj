@@ -183,10 +183,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ops_prase.h"
-				>
-			</File>
-			<File
 				RelativePath=".\plcc.cpp"
 				>
 			</File>
@@ -216,6 +212,14 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\plc_command_def.h"
+				>
+			</File>
+			<File
+				RelativePath=".\plc_prase.h"
+				>
+			</File>
 			<File
 				RelativePath=".\stdafx.h"
 				>

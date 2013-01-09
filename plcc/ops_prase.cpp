@@ -38,6 +38,15 @@ int SearchIwantStringByRegex(std::string src,std::string rgx,std::vector<std::st
 	return (int)outlist.size();
 }
 
+//根据正则表达式，把符合正则表达式的内容用空字符串替换掉，返回剩余的字符串
+int ReplaceIwantStringByRegex(std::string src,std::string rgx,std::string & outstr)
+{
+	boost::regex e;
+	e = rgx;
+	outstr = boost::regex_replace(src,e,"");
+	return (int)outstr.size();
+}
+
 int  prase_plc_ld(std::string & line)
 {
 	typedef struct _ld_ops_t
@@ -55,6 +64,8 @@ int  prase_plc_ld(std::string & line)
 	if(SearchIwantStringByRegex(line,rgx,outlist) == 1) {
 		unsigned long addr;
 		sresult = outlist[0];
+		rgx = "LD +";
+		ReplaceIwantStringByRegex(sresult,rgx,sresult);
 	    rgx = "\\d+";
 		if(SearchIwantStringByRegex(sresult,rgx,outlist) == 1) {
 			addr = atol(outlist[0].c_str());
@@ -149,4 +160,51 @@ int  prase_plc_out(std::string & line)
 	}
 	return -1;
 }
+
+
+
+int  prase_plc_ldkh(std::string & line)
+{
+	typedef struct _ld_ops_t
+	{
+		unsigned char op;
+	} ld_ops_t;
+	plc_op_data_t op;
+	std::vector<std::string> outlist;
+	std::string sresult;
+	op.index = plc_op_index++;
+	op.opstr = line;
+	std::string rgx = "LDKH";
+	if(SearchIwantStringByRegex(line,rgx,outlist) == 1) {
+		op.opdat.resize(sizeof(ld_ops_t));
+		ld_ops_t * po = (ld_ops_t *)&op.opdat[0];
+		po->op = PLC_LDKH;
+		plc_ops.push_back(op);
+		return 0;
+	}
+	return -1;
+}
+
+int  prase_plc_ldkl(std::string & line)
+{
+	typedef struct _ld_ops_t
+	{
+		unsigned char op;
+	} ld_ops_t;
+	plc_op_data_t op;
+	std::vector<std::string> outlist;
+	std::string sresult;
+	op.index = plc_op_index++;
+	op.opstr = line;
+	std::string rgx = "LDKL";
+	if(SearchIwantStringByRegex(line,rgx,outlist) == 1) {
+		op.opdat.resize(sizeof(ld_ops_t));
+		ld_ops_t * po = (ld_ops_t *)&op.opdat[0];
+		po->op = PLC_LDKL;
+		plc_ops.push_back(op);
+		return 0;
+	}
+	return -1;
+}
+
 
