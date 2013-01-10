@@ -30,5 +30,7 @@ int  prase_plc_set(std::string & line);
 int  prase_plc_rst(std::string & line);
 int  prase_plc_sei(std::string & line);
 int  prase_plc_out(std::string & line);
+int  prase_plc_outt(std::string & line);
+int  prase_plc_outc(std::string & line);
 
 #endif

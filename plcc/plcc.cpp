@@ -73,8 +73,8 @@ const plc_op_lenmap_t plc_len_map[] =
 const std::string  reg_plc_addr  = " +[XYMTC]\\d+[BDOH]* *(//.*)*";
 const std::string  red_plc_op_pre = "^ +";
 const std::string  reg_plc_out  = "^ +OUT +[XYM]\\d+[BDOH]* *(//.*)*";
-const std::string  reg_plc_outt = "^ +OUT +T\\d+ +K\\d+[BDOH]* *(//.*)*";
-const std::string  reg_plc_outc = "^ +OUT +C\\d+ +K\\d+[BDOH]* *(//.*)*";
+const std::string  reg_plc_outt = "^ +OUT +T\\d+[BDOH]* +K\\d+[BDOH]* *(//.*)*";
+const std::string  reg_plc_outc = "^ +OUT +C\\d+[BDOH]* +K\\d+[BDOH]* *(//.*)*";
 const std::string  reg_plc_op_jmp  = "^ +JMP +\\d+[BDOH]* *(//.*)*";
 const std::string  reg_plc_op_jmps  = "^ +JMPS +\\d+[BDOH]* *(//.*)*";
 const std::string  reg_plc_nop  = "^ *NOP *(//.*)*";
@@ -88,7 +88,7 @@ const std::string  reg_space    ="( +)";
 const std::string  reg_comment1 = "/*([^\\*]|(\\*)*[^\\*/])*(\\*)*/";
 const std::string  reg_comment2 = "(^ *//.*)";
 const std::string  reg_comment  = "(" + reg_comment1 + "|" + reg_comment2 + ")*";
-const std::string  reg_addr_ref = "^\\w+:";
+const std::string  reg_addr_ref = "^\\w+: *(//.*)*";
 
 std::vector<std::string>  plcline;
 std::vector<std::string>  devicestring;
@@ -145,11 +145,12 @@ void  prase_plc_ops(void)
 			prase_plc_sei(line);
 	    } else if(boost::regex_match(line,boost::regex(reg_plc_out))) {
 		    prase_plc_out(line);
-	    } else if(boost::regex_match(line,boost::regex(reg_plc_nop))) {
-		} else if(boost::regex_match(line,boost::regex(reg_plc_outt))) {
+	    } else if(boost::regex_match(line,boost::regex(reg_plc_outt))) {
+			prase_plc_outt(line);
 		} else if(boost::regex_match(line,boost::regex(reg_plc_outc))) {
-		    //o.op = PLC_NONE;
-		    //o.opstr = line;
+			prase_plc_outc(line);
+		} else if(boost::regex_match(line,boost::regex(reg_comment1))) {
+			//×¢ÊÍ£¬ºöÂÔs
 	    } else {
 		    //Î´ÖªÖ¸Áî£¬±¨´í
 	    }
@@ -185,6 +186,10 @@ int main(int argc, const char * argv[])
 	//printf("readline(%d)\n",read_in_plc(pfilename));
 
 
+	plcline.push_back("   OUT   C123  K500D  //this is one\n");
+	plcline.push_back("    OUT   T123  K200D    //this is one\n");
+	
+
 	plcline.push_back("   AND Y123  //this is one\n");
 	plcline.push_back("   OR Y123  //this is one\n");
 	plcline.push_back("   LDP Y123  //this is one\n");
@@ -197,8 +202,7 @@ int main(int argc, const char * argv[])
 	plcline.push_back("   RST Y123  //this is one\n");
 	plcline.push_back("   SEI Y123  //this is one\n");
 
-	plcline.push_back("    OUT   T123  K200D    //this is one\n");
-	plcline.push_back("   OUT   C123  K500D  //this is one\n");
+
 	
 	plcline.push_back(" LD T123     //this is one\n");
 	plcline.push_back("  LD  C123  //this is one\n");

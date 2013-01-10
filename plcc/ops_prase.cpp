@@ -936,7 +936,7 @@ int  prase_plc_out(std::string & line)
 	std::string sresult;
 	op.index = plc_op_index++;
 	op.opstr = line;
-	std::string rgx = "OUT +[XYMTC]\\d+";
+	std::string rgx = "OUT +[XYM]\\d+";
 	if(SearchIwantStringByRegex(line,rgx,outlist) == 1) {
 		unsigned long addr;
 		sresult = outlist[0];
@@ -947,7 +947,7 @@ int  prase_plc_out(std::string & line)
 			printf("error of addr!\n");
 			return -1;
 		}
-		rgx = "[XYMTC]";
+		rgx = "[XYM]";
 		if(SearchIwantStringByRegex(sresult,rgx,outlist) == 1) {
 			std::string addrtype = outlist[0];
 			if(addrtype == "X") {
@@ -955,10 +955,6 @@ int  prase_plc_out(std::string & line)
 				addr += IO_OUTPUT_BASE;
 			} else if(addrtype == "M") {
 				addr += AUXI_RELAY_BASE;
-			} else if(addrtype == "T") {
-				addr += TIMING100MS_EVENT_BASE;
-			} else if(addrtype == "C") {
-				addr += COUNTER_EVENT_BASE;
 			}
 			if(addr <= 0xFFFF) {
 				op.opdat.resize(sizeof(ld_ops_t));
@@ -978,6 +974,126 @@ int  prase_plc_out(std::string & line)
 	return -1;
 }
 
+
+
+int  prase_plc_outt(std::string & line)
+{
+	typedef struct _ld_ops_t
+	{
+		unsigned char op;
+		unsigned char addr_hi;
+		unsigned char addr_lo;
+		unsigned char kval_hi;
+		unsigned char kval_lo;
+	} ld_ops_t;
+	plc_op_data_t op;
+	std::vector<std::string> outlist;
+	std::string sresult;
+	op.index = plc_op_index++;
+	op.opstr = line;
+	std::string rgx = "OUT +T\\d+[BDOH]* +K\\d+[BDOH]*";
+	if(SearchIwantStringByRegex(line,rgx,outlist) == 1) {
+		unsigned long addr;
+		unsigned long kval;
+		std::string ssrc = outlist[0];
+		rgx = "T\\d+[BDOH]*";
+		if(SearchIwantStringByRegex(ssrc,rgx,outlist) == 1) {
+		    sresult = outlist[0];
+		    rgx = "\\d+";
+			if(SearchIwantStringByRegex(sresult,rgx,outlist) == 1) {
+				addr = atol(outlist[0].c_str());
+			} else {
+				printf("error of addr!\n");
+			    return -1;
+			}
+		}
+	    rgx = "K\\d+[BDOH]*";
+		if(SearchIwantStringByRegex(ssrc,rgx,outlist) == 1) {
+		    sresult = outlist[0];
+		    rgx = "\\d+";
+			if(SearchIwantStringByRegex(sresult,rgx,outlist) == 1) {
+				kval = atol(outlist[0].c_str());
+			} else {
+				printf("error of kval!\n");
+			    return -1;
+			}
+		}
+		addr += TIMING100MS_EVENT_BASE;
+		if(addr <= 0xFFFF) {
+		    op.opdat.resize(sizeof(ld_ops_t));
+		    ld_ops_t * po = (ld_ops_t *)&op.opdat[0];
+		    po->op = PLC_OUTT;
+		    po->addr_hi = (unsigned char)(addr>>8);
+		    po->addr_lo = (unsigned char)(addr&0xFF);
+		    po->kval_hi = (unsigned char)(kval>>8);
+		    po->kval_lo = (unsigned char)(kval&0xFF);
+		    plc_ops.push_back(op);
+			op.opstr.clear();
+		    return 0;
+		}
+	}
+	return -1;
+}
+
+
+int  prase_plc_outc(std::string & line)
+{
+	typedef struct _ld_ops_t
+	{
+		unsigned char op;
+		unsigned char addr_hi;
+		unsigned char addr_lo;
+		unsigned char kval_hi;
+		unsigned char kval_lo;
+	} ld_ops_t;
+	plc_op_data_t op;
+	std::vector<std::string> outlist;
+	std::string sresult;
+	op.index = plc_op_index++;
+	op.opstr = line;
+	std::string rgx = "OUT +C\\d+[BDOH]* +K\\d+[BDOH]*";
+	if(SearchIwantStringByRegex(line,rgx,outlist) == 1) {
+		unsigned long addr;
+		unsigned long kval;
+		std::string ssrc = outlist[0];
+		rgx = "C\\d+[BDOH]*";
+		if(SearchIwantStringByRegex(ssrc,rgx,outlist) == 1) {
+		    sresult = outlist[0];
+		    rgx = "\\d+";
+			if(SearchIwantStringByRegex(sresult,rgx,outlist) == 1) {
+				addr = atol(outlist[0].c_str());
+			} else {
+				printf("error of addr!\n");
+			    return -1;
+			}
+		}
+	    rgx = "K\\d+[BDOH]*";
+		if(SearchIwantStringByRegex(ssrc,rgx,outlist) == 1) {
+		    sresult = outlist[0];
+		    rgx = "\\d+";
+			if(SearchIwantStringByRegex(sresult,rgx,outlist) == 1) {
+				kval = atol(outlist[0].c_str());
+			} else {
+				printf("error of kval!\n");
+			    return -1;
+			}
+		}
+		addr += COUNTER_EVENT_BASE;
+		if(addr <= 0xFFFF) {
+		    op.opdat.resize(sizeof(ld_ops_t));
+		    ld_ops_t * po = (ld_ops_t *)&op.opdat[0];
+		    po->op = PLC_OUTC;
+		    po->addr_hi = (unsigned char)(addr>>8);
+		    po->addr_lo = (unsigned char)(addr&0xFF);
+		    po->kval_hi = (unsigned char)(kval>>8);
+		    po->kval_lo = (unsigned char)(kval&0xFF);
+		    plc_ops.push_back(op);
+			op.opstr.clear();
+		    return 0;
+		}
+	}
+	return -1;
+}
 
 
 int  prase_plc_ldkh(std::string & line)
